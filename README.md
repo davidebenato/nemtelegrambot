@@ -6,7 +6,6 @@ to set it up please install the following node.js packages:
 npm install --save telegram-node-bot
 npm install node-persist
 
-to configure it please edit index.js and change the telegram api key:
+to configure it please edit config.json and change the telegram api key:
 
-var telegram_key = '280681948:AAHSHszkiaa_4_u9vXXXXXXXXXX'
-
+Optionally the supernode to which we connect to can be changed as well
