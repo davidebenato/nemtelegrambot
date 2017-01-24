@@ -9,8 +9,15 @@ const TextCommand = Telegram.TextCommand
 var storage = require('node-persist');
 storage.initSync();
 
-// write the NIS address here (we picked one of the supernodes for the time being)
-var conf = { 'nis_address': '85.25.36.97'};
+var fs = require('fs');
+var config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+
+var telegram_key = config.telegram_key
+
+console.log("nis address: " + config.nis_address)
+console.log("telegram_key: " + config.telegram_key)
+
+var conf = { 'nis_address': config.nis_address};
 
 var nem = new NEM(conf);
 
@@ -18,7 +25,6 @@ Array.prototype.contains = function(element){
     return this.indexOf(element) > -1;
 };
 
-var telegram_key = '280681948:AAHSHszkiaa_4_u9vRekdE1PHKLPw5yedXX'
 const tg = new Telegram.Telegram(telegram_key, {
     workers: 1
 })
@@ -169,9 +175,6 @@ class RegisterController extends TelegramBaseController {
                         $.sendMessage("wrong address, please provide a well formed address [NAYFRF-6C2DZK-KEQEE2-SNVBBD-G354SY-F4XHMY-JDFP]")
                         return
                     }
-
-
-                    console.log("includes chatID: " + keys.contains($.chatId.toString()))
 
                     //reading/saving wallet
                     readAddress(wallet_key, null, null, function (old, wallet, chat_id) {
