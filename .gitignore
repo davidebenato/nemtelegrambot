@@ -1,4 +1,3 @@
 .node-persist
 .bin
-.node_modules
-
+node_modules/
