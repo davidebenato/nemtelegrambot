@@ -26,6 +26,11 @@ Array.prototype.contains = function(element){
 };
 
 const tg = new Telegram.Telegram(telegram_key, {
+    webAdmin: {
+        port: config.local_port,
+        host: 'localhost'
+    }
+}, {
     workers: 1
 })
 

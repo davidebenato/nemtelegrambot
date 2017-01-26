@@ -1,4 +1,5 @@
 {
   "nis_address": "85.25.36.97",
-  "telegram_key": "write_your_telegram_key_here"
+  "telegram_key": "write_your_telegram_key_here",
+  "local_port": 7776
 }
