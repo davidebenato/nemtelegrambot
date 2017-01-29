@@ -36,18 +36,18 @@ const tg = new Telegram.Telegram(telegram_key, {
 })
 
 
-
-
 function readAddress(address, old_wallet, chat_id, cb){
     //formatting the address removing the -
     address = address.replace(/-/g,"")
     
     console.log("querying: " + address)
-            
+    
     var query = '/account/get?address=' + address 
         nem.nisGet(query, null
         ,function(err) {
-            console.log(err);
+            console.log(err)
+            tg.api.sendMessage(chat_id, 'Error while querying wallet: [' + old_wallet.account.address + "]")
+            tg.api.sendMessage(chat_id, 'Error= {' + err + '}')
         }
         ,function(res) {
 
