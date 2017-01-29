@@ -26,13 +26,17 @@ Array.prototype.contains = function(element){
 };
 
 const tg = new Telegram.Telegram(telegram_key, {
+    workers: 1
+},
+{ 
     webAdmin: {
         port: config.local_port,
         host: 'localhost'
     }
-}, {
-    workers: 1
 })
+
+
+
 
 function readAddress(address, old_wallet, chat_id, cb){
     //formatting the address removing the -
@@ -126,7 +130,7 @@ class BalanceController extends TelegramBaseController {
    * @param {Scope} $
    */
     balanceHandler($) {
-
+        storage.initSync();
         var result = storage.getItemSync($.chatId.toString())
         if(result){
             $.sendMessage('registered wallets -> ' + result.account.address + " balance: " + result.account.balance)
