@@ -25,10 +25,9 @@ Array.prototype.contains = function(element){
     return this.indexOf(element) > -1;
 };
 
-const tg = new Telegram.Telegram(telegram_key, {
-    workers: 1
-},
+const tg = new Telegram.Telegram(telegram_key,
 { 
+    workers: 1,
     webAdmin: {
         port: config.local_port,
         host: 'localhost'
@@ -41,7 +40,7 @@ function readAddress(address, old_wallet, chat_id, cb){
     address = address.replace(/-/g,"")
     
     console.log("querying: " + address)
-    
+
     var query = '/account/get?address=' + address 
         nem.nisGet(query, null
         ,function(err) {
