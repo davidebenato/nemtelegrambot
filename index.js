@@ -71,6 +71,7 @@ function readAddress(address, old_wallet, chat_id, cb){
 tg.onMaster(() => {
 
     function checkAccounts(){
+        storage.initSync();
         storage.forEach(function(key, value) {
 
         console.log(new Date().toString() + " chatId: " + key);
@@ -113,7 +114,7 @@ tg.onMaster(() => {
 
     }
     //checking every minunte
-    setInterval(checkAccounts, 1 * 60000); 
+    setInterval(checkAccounts, 1 * 60000)
 })
 
 
@@ -197,7 +198,7 @@ class RegisterController extends TelegramBaseController {
                             console.log(wallet)
                             return   
                         }
-
+                        storage.initSync();
                         storage.setItemSync($.chatId.toString(), wallet);
 
                         $.sendMessage('Registered wallet: ' + wallet_key)
