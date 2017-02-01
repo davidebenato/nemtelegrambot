@@ -111,20 +111,20 @@ tg.onMaster(() => {
 
                     //TODO add more checks here if you want to be notified of different things
                     if(wallet.account.balance != old_wallet.account.balance){
-                        tg.api.sendMessage(chat_id, 'Balance for [' + wallet_key + '] was [' + old_wallet.account.balance 
+                        tg.api.sendMessage(chat_id, 'Balance for [' + old_wallet.account.address + '] was [' + old_wallet.account.balance 
                             + "] and now it's [" + wallet.account.balance+ "]")
 
                         //saving results
-                        console.log('saving wallet: ' + wallet_key)
+                        console.log('saving wallet: ' + wallet.account.address)
 
                         var storage_dir = './.storage/' + chat_id
                         var json_string = JSON.stringify(wallet);
-                        fs.writeFile(storage_dir + '/' + wallet_key, json_string, function (err) {
+                        fs.writeFile(storage_dir + '/' + wallet.account.address, json_string, function (err) {
                             if (err) return console.log(err);
                         });
                     }
                     else{
-                        console.log("balance didn't change: " + wallet_key + " " + wallet.account.balance)
+                        console.log("balance didn't change: " + wallet.account.address + " " + wallet.account.balance)
                     }
                 })
            }
@@ -206,7 +206,7 @@ class RegisterController extends TelegramBaseController {
                 error: 'sorry, wrong input',
                 validator: (message, callback) => {
 
-                    var wallet_key = message.text.toString()
+                    var wallet_key = message.text.toString().toUpperCase().trim()
                     if(!wallet_key || wallet_key.length != 46){
                         $.sendMessage("wrong address, please provide a well formed address [NAYFRF-6C2DZK-KEQEE2-SNVBBD-G354SY-F4XHMY-JDFP]")
                         return
@@ -229,10 +229,10 @@ class RegisterController extends TelegramBaseController {
                         var storage_dir = "./.storage/" + $.chatId.toString()
                         makeDir(storage_dir)
 
-                        var json_string = JSON.stringify(wallet);
-                        fs.writeFile(storage_dir + '/' + wallet_key, json_string, function (err) {
+                        var json_string = JSON.stringify(wallet)
+                        fs.writeFile(storage_dir + '/' + wallet.account.address, json_string, function (err) {
                             if (err) return console.log(err);
-                            //console.log('File saved');
+                            console.log('File saved: ' + wallet.account.address);
                         });
 
                         $.sendMessage('Registered wallet: ' + wallet_key)
