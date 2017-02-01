@@ -6,9 +6,6 @@ const TelegramBaseController = Telegram.TelegramBaseController
 const StartController = Telegram.StartController
 const TextCommand = Telegram.TextCommand
 
-var storage = require('node-persist');
-storage.initSync();
-
 var fs = require('fs');
 var config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
 
@@ -34,6 +31,20 @@ const tg = new Telegram.Telegram(telegram_key,
     }
 })
 
+function makeDir(dirname)
+{
+    if (!fs.existsSync(dirname)){
+        fs.mkdirSync(dirname);
+    }
+}
+
+function getDirectories (srcpath) {
+   const fs = require('fs')
+   const path = require('path')
+
+  return fs.readdirSync(srcpath)
+    .filter(file => fs.statSync(path.join(srcpath, file)).isDirectory())
+}
 
 function readAddress(address, old_wallet, chat_id, cb){
     //formatting the address removing the -
@@ -71,58 +82,67 @@ function readAddress(address, old_wallet, chat_id, cb){
 tg.onMaster(() => {
 
     function checkAccounts(){
-        storage.initSync();
-        storage.forEach(function(key, value) {
 
-        console.log(new Date().toString() + " chatId: " + key);
+        var dirs = getDirectories('./.storage')
 
-        var chat_id = parseInt(key)
+        for (var i = 0, len = dirs.length; i < len; i++) {
+            var chat_id = dirs[i]
+            console.log(chat_id)
 
-        console.log('registered wallet -> ' + value.account.address)
+            // looping through all the chat ids
+            var wallets_dir = './.storage/' + chat_id
+            var files = fs.readdirSync(wallets_dir)
+            for (var w = 0; w < files.length; w++) {
+                var old_wallet = JSON.parse(fs.readFileSync(wallets_dir + '/' + files[w], 'utf8'))
 
-        //query the wallet:
-        var old_wallet = value
-        var wallet_key = value.account.address
-        readAddress(wallet_key, old_wallet, chat_id, function (old_wallet, wallet, chat_id) {
+                var wallet_key = files[w]
+                readAddress(wallet_key, old_wallet, chat_id, function (old_wallet, wallet, chat_id) {
 
-            if(wallet.error != undefined && wallet.error){
-                console.log(wallet)
-                $.sendMessage('Error: ' + wallet.error + ' -> ' + wallet.message)
-                return
-            }
-            
-            if(wallet.error != undefined && wallet.error){
-                console.log(wallet)
-                return
-            }
+                    if(wallet.error != undefined && wallet.error){
+                        console.log(wallet)
+                        $.sendMessage('Error: ' + wallet.error + ' -> ' + wallet.message)
+                        return
+                    }
+                    
+                    if(wallet.error != undefined && wallet.error){
+                        console.log(wallet)
+                        return
+                    }
 
-            //TODO add more checks here if you want to be notified of different things
-            if(wallet.account.balance != old_wallet.account.balance){
-                tg.api.sendMessage(chat_id, 'Balance for [' + wallet_key + '] was [' + old_wallet.account.balance 
-                    + "] and now it's [" + wallet.account.balance+ "]")
+                    //TODO add more checks here if you want to be notified of different things
+                    if(wallet.account.balance != old_wallet.account.balance){
+                        tg.api.sendMessage(chat_id, 'Balance for [' + wallet_key + '] was [' + old_wallet.account.balance 
+                            + "] and now it's [" + wallet.account.balance+ "]")
 
-                //saving results
-                console.log('saving wallet')
-                storage.setItemSync(chat_id.toString(), wallet);
-            }
-            else{
-                console.log("balance didn't change: " + wallet.account.balance)
-            }
-        })
+                        //saving results
+                        console.log('saving wallet: ' + wallet_key)
 
-    })
+                        var storage_dir = './.storage/' + chat_id
+                        var json_string = JSON.stringify(wallet);
+                        fs.writeFile(storage_dir + '/' + wallet_key, json_string, function (err) {
+                            if (err) return console.log(err);
+                        });
+                    }
+                    else{
+                        console.log("balance didn't change: " + wallet_key + " " + wallet.account.balance)
+                    }
+                })
+           }
+        }
 
     }
-    //checking every minunte
-    setInterval(checkAccounts, 1 * 60000)
+    //checking every 2 minutes
+    setInterval(checkAccounts, 1 * 120000)
 })
 
 
 tg.onMaster(() => {
     var opt = nem.getOptions();
     console.log(opt);
-})
 
+    //setting up storage
+    makeDir('./.storage')
+})
 
 
 class BalanceController extends TelegramBaseController {
@@ -130,10 +150,17 @@ class BalanceController extends TelegramBaseController {
    * @param {Scope} $
    */
     balanceHandler($) {
-        storage.initSync();
-        var result = storage.getItemSync($.chatId.toString())
-        if(result){
-            $.sendMessage('registered wallets -> ' + result.account.address + " balance: " + result.account.balance)
+        // setting up storage folder
+        var wallets_dir = './.storage/' + $.chatId.toString()
+        if (!fs.existsSync(wallets_dir)){
+            $.sendMessage("you don't have any wallets registered!")
+        }
+
+        var files = fs.readdirSync(wallets_dir);
+        
+        for (var i = 0, len = files.length; i < len; i++) {
+            var wallet = JSON.parse(fs.readFileSync(wallets_dir + '/' + files[i], 'utf8'))
+            $.sendMessage(files[i] + " balance: " + wallet.account.balance)
         }
     }
 
@@ -198,8 +225,15 @@ class RegisterController extends TelegramBaseController {
                             console.log(wallet)
                             return   
                         }
-                        storage.initSync();
-                        storage.setItemSync($.chatId.toString(), wallet);
+
+                        var storage_dir = "./.storage/" + $.chatId.toString()
+                        makeDir(storage_dir)
+
+                        var json_string = JSON.stringify(wallet);
+                        fs.writeFile(storage_dir + '/' + wallet_key, json_string, function (err) {
+                            if (err) return console.log(err);
+                            //console.log('File saved');
+                        });
 
                         $.sendMessage('Registered wallet: ' + wallet_key)
                         })
